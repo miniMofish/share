@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS分享_关于布局中的haslayout和BFC</title>
+    <script src="lib/jquery183.js"></script>
+    <script src="lib/Ascensor.js"></script>
+    <link rel="stylesheet" href="lib/monokai_sublime.css">
+    <script src="lib/highlight.pack.js"></script>
+    <link rel="stylesheet" href="lib/style.css"/>
+    <script src="lib/easing.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+<div id="ascensor">
+    <div id="p1" class="bg1">
+        <br/><br/>
+        <h2>关于布局中的haslayout和BFC</h2>
+        <p style="text-align:center">——以及由此引起布局问题</p>
+
+        <br/><br/><br/><br/>
+        <h4>By: Minilove</h4>
+    </div>
+    <div id="p2" class="bg6">
+        <h2>什么是haslayout？</h2>
+        <ol>
+            <li><i>概述</i>：“Layout”是一个 IE/Win 的私有概念，它决定了一个元素如何显示以及约束其包含的内容、如何与其他元素交互和建立联系、如何响应和传递应用程序事件、用户事件等。<span style="color:#ff0">简单来讲，就是如果一个元素触发了haslayout后，该元素就会成为一个隔离了的独立元素，元素内部的内容和外部的元素互不影响。</span></li>
+            <li><i>属性</i>：haslayout只有两个属性，true或false。当为true时，表示“拥有布局”，负责对自身的内容进行计算大小和组织；为false时，即“不拥有布局”，只能依赖于父元素来计算尺寸和组织内容。部分html元素本身拥有layout，不拥有layout的属性可以通过设置某些css属性来得到layout属性。<span style="color:#ffbf73">（当haslayout为true时，没有办法设置hasLayout=false， 除非把一开始那些触发hasLayout的CSS属性去除）</span></li>
+        </ol>
+        <p style="text-align:center">最经典的例子就是触发haslayout清除掉文字环绕浮动元素，<a href="http://sandbox.runjs.cn/show/3szhz35g" target="_blank">猛戳这里看demo</a></p>
+    </div>
+    <div id="p3" class="bg2">
+        <h3>默认拥有layout的元素（不完全列表）</h3>
+        <ol style="list-style:disc">
+            <li>body, html</li>
+            <li>table, tr, th, td</li>
+            <li>img</li>
+            <li>hr</li>
+            <li>input, button, file, select, textarea, fieldset</li>
+            <li>marquee</li>
+            <li>frameset, frame, iframe</li>
+            <li>objects, applets, embed</li>
+        </ol>
+    </div>
+    <div id="p4" class="bg6">
+        <h3>能够触发haslayout的css属性</h3>
+        <pre class="css">
+            ie6
+            <code>
+                display: inline-block
+                height: /*任何值除了auto*/
+                width: /*任何值除了auto*/
+                zoom: /*任何值除了normal*/
+                float: /*left 或者 right*/
+                position: absolute
+                writing-mode: tb-rl /*（设置文字的书写方向）*/
+            </code>
+            ie7下这些也可触发
+            <code>
+                overflow：hidden、scroll、auto
+                overflow-x|y：/*同上*/
+                position：fixed
+                min-width：/*任何值*/
+                max-width：/*none外任何值*/
+                min-height：/*任何值*/
+                max-height：/*none外任何值*/
+            </code>
+        </pre>
+    </div>
+    <div id="p5" class="bg1">
+        <h3>为什么没有ie8+触发haslayout的css属性</h3>
+        <p style="text-align:center;line-height:2">haslayout是微软早期用来修复低版的浏览器的渲染问题，针对IE6、IE7、IE8兼容性模式（仿IE7），<br>IE8以上的浏览器已经趋于标准，所以IE8+和高级的浏览器都遵循CSS 2.1 规范中的一个概念：<br>Block formatting Context(BFC)</p>
+    </div>
+    <div id="p6">
+        <h2>Block Formatting Context的特性</h2>
+        <p style="text-align:center">——从表现上来讲，跟haslayout是一样一样的，亲</p>
+        <p style="text-align:center">
+            <br><br>
+            <span style="color:#ff0">就是如果一个元素触发了 BFC 后，该元素就会成为一个隔离了的独立元素，元素内部的内容和外部的元素互不影响。</span>
+        </p>
+    </div>
+
+    <div id="p7" class="bg2">
+        <h2>能够触发BFC的css属性</h2> 
+        <pre class="css">
+            <code>
+                float: /*除none外的值*/
+                overflow: hidden
+                display: /*为table-cell，table-caption，inline-block*/
+                position: /*不为static，relative*/
+            </code>
+        </pre>
+    </div>
+    <div id="p8" class="bg6">
+        <h3>使用触发haslyout和BFC能够解决的布局问题和兼容性</h3>
+        <p style="text-align:center">——嗯，这才是你们最关心的，比如这些：</p>
+        <p class="bug_menu">
+            <a>清除子元素浮动造成的影响</a>
+            <a>不和浮动元素相重叠</a>
+            <a>margin重叠（分为几种情况）</a>
+            <a>ie6-7下不支持display:inline-block</a>
+        </p>
+    </div>
+    <div id="p9">
+        <h2>清除子元素浮动造成的影响</h2>
+        <p style="text-align:center;font-size:18px">——话外题：为什么是清除“浮动造成的影响”而不是“清除浮动”呢？</p>
+        <p class="text-box">根据 CSS2.1 规范的高度计算规则，在进行普通流中的块级非替换元素的高度计算时，浮动子元素不参与计算。但触发了haslayout或bfc的元素已经是一个独立的盒子，里面的元素不会在布局上影响外面的元素，所以其浮动子元素也会参与高度计算。</p>
+        <pre class="css">
+            <code>
+                overflow: hidden /*非ie6*/
+                zoom: 1 /*ie6*/
+            </code>
+        </pre>
+        <p style="text-align:center"><a href="http://sandbox.runjs.cn/show/xgfdtpy7" target="_blank">猛戳看demo</a> & <a href="http://www.iyunlu.com/view/css-xhtml/55.html" target="_blank">和clearfix的区别，看了你就明白</a></p>
+    </div>
+    <div id="p10">
+        <h2>浮动元素相重叠</h2>
+        <p class="text-box">两个元素相邻，第一个有浮动，第二元素的内容会被第一个覆盖，比如文字环绕图片的场景。但有些场景要求不要环绕，比如新闻列表形式。在第二个元素上触发haslayout和bfc可以解决</p>
+        <pre>
+            <code class="css">
+               /*万能药啊~*/
+
+               overflow: hidden
+               zoom: 1
+            </code>
+        </pre>
+        <p style="text-align:center"><a href="http://sandbox.runjs.cn/show/3szhz35g" target="_blank">猛戳看demo</a></p>
+    </div>
+    <div id="p11" class="bg6">
+        <h2>嵌套元素的垂直(上下)margin重叠</h2>
+        <p  style="margin:10px 30px">在常规文档流中，嵌套的元素，其中父元素的垂直margin会和子元素的垂直margin重叠，并作用在父元素上。重叠规则：</p>
+        <ul style="margin:10px 60px">
+            <li>a、全部都为正值，取最大者</li>
+            <li>b、不全是正值，则都取绝对值，然后用正值减去最大值；</li>
+            <li>c、没有正值，则都取绝对值，然后用0减去最大值。</li>
+            <li style="text-align:center"><a href="http://sandbox.runjs.cn/show/mwrhucbt" target="_blank">猛戳看demo</a></li>
+            </ul>
+        <pre>
+            <code class="css">
+               /*解决方法较多~ps:以下是作用在父级上*/
+
+            1、/*触发haslayout和bfc*/
+               overflow: hidden
+               zoom: 1;
+               /*...等等可触发的属性，参考前面那两页属性*/
+
+            2、/*设置透明边框*/
+                border: 1px solid transparent
+            3、/*设置上下padding值*/
+                padding: 1px 0
+            </code>
+        </pre>
+    </div>
+    <div id="p12" class="bg6">
+        <h2>普通文流档中两个相邻的元素垂直margin重叠</h2>
+        <p style="text-align:center">——题外话：这个与haslayout和bfc无关，完全是w3c的规范就是如此，并且规则与嵌套关系的规则一致<br><a href="http://www.smallni.com/collapsing-margin/" target="_blank">查看更多资料</a></p>
+        <pre>
+            <code class="css">
+                /*解决方法，重新设置margin-bottom或margin-top为总的间距值，或者一个用margin,一个用padding~*/
+
+                上元素: margin-bottom: 100px;/*假设总间距为100px*/
+                /*****/
+                下元素: margin-top: 100px;
+                /*****/
+                上元素: margin-bottom: 50px;
+                下元素: padding-top: 50px;
+            </code>
+        </pre>
+        <p style="text-align:center"><a href="http://sandbox.runjs.cn/show/6swf48qj" target="_blank">依然是猛戳看demo</a></p>
+    </div>
+    <div id="p13">
+        <h2>让ie6-7下支持display:inline-block</h2>
+        <p class="text-box">IE6、7不支持inline-block，你所看到的内联元素可支持，是因为inline-block触发了haslayout属性，所元素具备了inline block的表现；块级元素即使触发了haslayout,它依然是个块级元素，所以需要先转成inline，再用zoom去触发haslayout，这样也便有了inline block的表现。所以就有以下众人皆知的解决方案，有兴趣深入的再看<a href="http://ued.taobao.com/blog/2012/08/inline-block/" target="_blank">这里</a></p>
+        <pre>
+            <code class="css">
+                display:inline-block; /*非ie6-7*/
+                *display:inline;
+                zoom:1
+            </code>
+        </pre>
+        <p style="text-align:center"><a href="http://sandbox.runjs.cn/show/dut1mfsd" target="_blank">这个就不需要demo了吧，别点了</a></p>
+    </div>
+    <div id="p14" class="bg3">
+        <br/><br/><br/><br/>
+        <h3>感觉怎么样？没什么问题吧？</h3>
+    </div>
+    <div id="p15" class="bg2">
+        <h2>提个建议</h2>
+        <ol>
+            <li>一旦有浮动元素，请务必clearfix</li>
+            <li>不要烂用position:relative，除非你很熟悉它</li>
+            <li>浮动时记得随手清除ie6下双倍margin-left</li>
+        </ol>
+    </div>
+    <div id="p16" class="bg8">
+        <h3>参考资料</h3>
+        <ul>
+            <li><a href="http://w3ctech.com/p/1101" target="_blank">http://w3ctech.com/p/1101</a></li>
+            <li><a href="http://simplej.blog.163.com/blog/static/181014362201110334948690/" target="_blank">http://simplej.blog.163.com/blog/static/181014362201110334948690/</a></li>
+            <li><a href="http://www.smallni.com/haslayout-block-formatting-contexts/" target="_blank">http://www.smallni.com/haslayout-block-formatting-contexts/</a></li>
+            <li><a href="http://www.sitepoint.com/web-foundations/internet-explorer-haslayout-property/" target="_blank">http://www.sitepoint.com/web-foundations/internet-explorer-haslayout-property/</a></li>
+            <li><a href="http://www.hujuntao.com/web/css/css-margin-overlap.html" target="_blank">http://www.hujuntao.com/web/css/css-margin-overlap.html</a></li>
+        </ul> 
+    </div>
+    <div id="p17" class="bg5">
+        <br/><br/><br/>
+        <h3>感谢大家</h3>   
+    </div>
+</div>
+<script>
+    hljs.initHighlightingOnLoad();
+    $(function(){
+        var box = $('#ascensor');
+        var div = box.find("div");
+        var n = div.length;
+        var i = 0;
+        var navigationMap = $("<ul>").addClass("navigationMap")
+        var selector = "";
+        var idArr = [];
+        for ( ; i < n ; i++ ){
+            selector += "<li><a href=#page" + (i+1) + ">" + (i+ 1) +  "</a></li>";
+            idArr.push('page'+(i+1));
+        }
+        $("body").append( navigationMap.append(selector) );
+
+        var index = 1 ;
+        try{
+
+            index = window.location.href.split("#page")[1] - 1  ;
+            $(".navigationMap li").removeClass("active").eq(index).addClass("active");
+        }
+        catch(e){}
+
+        $('a.c').on('click',function(){
+            var index = $(this)[0].href.split('#page')[1] - 1;
+            console.log( index )
+            $(".navigationMap li").removeClass("active").eq(index).addClass("active");
+        });
+
+        $(".navigationMap li a,#page2 a").on("click",function(){
+            if( window.location.href.split("#page")[1] == this.href.split("page")[1] ){
+                return false;
+            }
+            setTimeout(function(){
+                index = window.location.href.split("#page")[1] - 1  ;
+                $(".navigationMap li").removeClass("active").eq(index).addClass("active");
+            },320)
+
+        });
+        $(document).on("keyup",function( e ){
+            var e = e || window.event ;
+            if(e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40 ) {
+                setTimeout(function(){
+                    index = window.location.href.split("#page")[1] - 1  ;
+                    $(".navigationMap li").removeClass("active").eq(index).addClass("active");
+                },420)
+            }
+        });
+
+        box.ascensor({
+            childType: "div",
+            ascensorFloorName: idArr,
+            time : 400,
+            windowsOn: 0,
+            easing: "easeInQuad",
+            direction:'x'
+        });
+    })
+</script>
+</body>
+</html>
